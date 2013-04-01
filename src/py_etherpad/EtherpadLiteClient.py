@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 """Module to talk to EtherpadLite API."""
 
+import json
+import urllib
+import urllib2
+
 class EtherpadLiteClient:
     """Client to talk to EtherpadLite API."""
-    API_VERSION = "1.2.8"  # TODO probably 1.1 sometime soon
+    API_VERSION = "TEST"
 
     CODE_OK = 0
     CODE_INVALID_PARAMETERS = 1
@@ -189,6 +193,10 @@ class EtherpadLiteClient:
 
     # PAD CONTENT
     # Pad content can be updated and retrieved through the API
+
+    def getAttributePool(self, padID):
+        """returns the text of a pad"""
+        return self.call("getAttributePool", {"padID": padID})
 
     def getText(self, padID, rev=None):
         """returns the text of a pad"""
