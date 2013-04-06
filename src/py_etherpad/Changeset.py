@@ -71,6 +71,8 @@ class Changeset:
         for op in self.op_iterator(unpacked['ops']):
             if op["op_code"] == "+":
                 txt.insert_at(txt_idx, bank[bank_idx:bank_idx+op["chars"]], op['attribs'])
+                if not len(op['attribs']) is 0:
+                    txt.set_attr(txt_idx, op['attribs'], op['chars'])
                 bank_idx += op["chars"]
                 txt_idx += op["chars"]
             elif op["op_code"] == "-":

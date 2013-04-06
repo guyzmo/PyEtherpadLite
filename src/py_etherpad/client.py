@@ -84,13 +84,13 @@ class EtherpadDispatch(object):
         vars = data["collab_client_vars"]
 
         text  = vars["initialAttributedText"]["text"]
-        csd   = dict(old_len=1,
+        csd   = dict(old_len=len(text),
                      new_len=len(text),
                      ops=vars["initialAttributedText"]["attribs"],
-                     char_bank=text)
+                     char_bank="")
         apool = vars["apool"]
 
-        self.text = Text(text="", cursors=self.cursors, attribs=Attributes(pool=apool), authors=self.authors)
+        self.text = Text(text=text, cursors=self.cursors, attribs=Attributes(pool=apool), authors=self.authors)
         csd = pack(csd)
         print "first changeset:", csd
         self.text.update(csd)
