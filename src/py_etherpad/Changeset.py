@@ -2,58 +2,70 @@
 """Reverse engineered EtherpadLite Changeset API."""
 
 import re
+import string
+
+def numToStr(num, b=36, numerals=string.digits + string.ascii_lowercase):
+    """
+    Converts integer num into a string representation on base b
+    @param b {int} base to use
+    @param numerals {string} characters used for string representation
+    @returns {string} string representation of num in base b
+    """
+    # http://stackoverflow.com/questions/2267362/convert-integer-to-a-string-in-a-given-numeric-base-in-python
+    return ((num == 0) and numerals[0]) \
+            or (numToStr(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b])
+def unpack(cs):
+    """
+    Unpacks a string encoded Changeset into a proper Changeset dict
+    @param cs {string} String encoded Changeset
+    @returns {dict} a Changeset class
+    """
+    header_regex = r"Z:([0-9a-z]+)([><])([0-9a-z]+)|"
+    header_match = re.match(header_regex, cs)
+    headers = header_match.groups()
+
+    if header_match is None or len(headers) == 0:
+        return dict()
+
+    old_len     = int(headers[0], 36)
+    change_sign = 1 if headers[1] == ">" else -1
+    change_mag  = int(headers[2], 36)
+    new_len     = old_len + change_sign * change_mag
+    ops_start   = len(headers[0])+len(headers[1])+len(headers[2])
+    ops_end     = cs.find("$")
+    if ops_end < 0:
+        ops_end = len(cs)
+    return {
+                "old_len": old_len,
+                "new_len": new_len,
+                "ops": cs[ops_start:ops_end],
+                "char_bank": cs[ops_end+1:]
+            }
+
+def pack(csd):
+    """
+    Packs a Changeset dict into a string encoded Changeset
+    @param cs {dict} a Changeset dict
+    @returns {string} String encoded Changeset
+    """
+    len_diff = csd["new_len"] - csd["old_len"]
+    len_diff_str = "<" + numToStr(len_diff) if len_diff >= 0 else "<" + numToStr(-len_diff)
+    a = [ 'Z:', numToStr(csd["old_len"]), len_diff_str, "|", csd["ops"], "$", csd["char_bank"] ]
+    return ''.join(a)
+
 
 class Changeset:
     def __init__(self, attr):
         self._attribs = attr
-# /**
-#  * Unpacks a string encoded Changeset into a proper Changeset object
-#  * @params cs {string} String encoded Changeset
-#  * @returns {Changeset} a Changeset class
-#  */
 
-    def unpack(self, cs):
-        header_regex = r"Z:([0-9a-z]+)([><])([0-9a-z]+)|"
-        header_match = re.match(header_regex, cs)
-        headers = header_match.groups()
-
-        if header_match is None or len(headers) == 0:
-            return dict()
-
-        old_len     = int(headers[0], 36)
-        change_sign = 1 if headers[1] == ">" else -1
-        change_mag  = int(headers[2], 36)
-        new_len     = old_len + change_sign * change_mag
-        ops_start   = len(headers[0])+len(headers[1])+len(headers[2])
-        ops_end     = cs.find("$")
-        if ops_end < 0:
-            ops_end = len(cs)
-        return {
-                 "old_len": old_len,
-                 "new_len": new_len,
-                 "ops": cs[ops_start:ops_end],
-                 "char_bank": cs[ops_end+1:]
-                }
-
-    def pack(self, csd):
-        def numToStr(num,b=36,numerals="0123456789abcdefghijklmnopqrstuvwxyz"):
-            # http://stackoverflow.com/questions/2267362/convert-integer-to-a-string-in-a-given-numeric-base-in-python
-            return ((num == 0) and numerals[0]) or (baseN(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b])
-
-        len_diff = csd["new_len"] - csd["old_len"]
-        len_diff_str = "<" + numToStr(len_diff) if len_diff >= 0 else "<" + numToStr(-len_diff)
-        a = [ 'Z:', numToStr(old_len), len_diff_str, csd["ops"], csd["char_bank"] ]
-        return a.join('')
-
-
-# /**
-#  * Applies a Changeset to a string
-#  * @params cs {string} String encoded Changeset
-#  * @params str {string} String to which a Changeset should be applied
-#  */
     def apply_to_text(self, cs, txt):
-        unpacked = self.unpack(cs)
-        assert len(txt)+1 == unpacked['old_len']
+        """
+        Applies a Changeset to a string
+        @params cs {string} String encoded Changeset
+        @params str {string} String to which a Changeset should be applied
+        """
+        unpacked = unpack(cs)
+        assert len(txt)+1 in (unpacked['old_len'], unpacked['old_len']+1)
         bank = unpacked['char_bank']
         bank_idx, txt_idx = (0, 0)
         for op in self.op_iterator(unpacked['ops']):
@@ -68,13 +80,13 @@ class Changeset:
                     txt.set_attr(txt_idx, op['attribs'], op['chars'])
                 txt_idx += op["chars"]
 
-# /**
-#  * this function creates an iterator which decodes string changeset operations
-#  * @param opsStr {string} String encoding of the change operations to be performed
-#  * @param optStartIndex {int} from where in the string should the iterator start
-#  * @return {Op} type object iterator
-#  */
     def op_iterator(self, opstr, op_start_idx=0):
+        """
+        this function creates an iterator which decodes string changeset operations
+        @param opsStr {string} String encoding of the change operations to be performed
+        @param optStartIndex {int} from where in the string should the iterator start
+        @return {Op} type object iterator
+        """
         regex = r"((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=\<\>])([0-9a-z]+)|\?|"
         start_idx = op_start_idx
         curr_idx  = start_idx

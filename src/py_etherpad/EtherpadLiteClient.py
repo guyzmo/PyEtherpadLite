@@ -7,7 +7,7 @@ import urllib2
 
 class EtherpadLiteClient:
     """Client to talk to EtherpadLite API."""
-    API_VERSION = "TEST"
+    API_VERSION = "1.2.8"
 
     CODE_OK = 0
     CODE_INVALID_PARAMETERS = 1

@@ -1,26 +1,28 @@
 #!/usr/bin/env python
 
 class Attributes:
-    def __init__(self, conn, pad):
+    def __init__(self, conn=None, pad=None,
+                        pool=dict(numToAttrib={}, attribToNum={})):
         self._conn = conn
         self._pad = pad
-        self._pool = dict(numToAttrib={}, attribToNum={})
+        self._pool = pool
 
         self._attrinorder = list()
         self._attrlists = dict()
         self._authors = dict()
 
         self._attribs = dict()
-        #self._attrlen = dict()
 
     def get(self, attr):
         attr = str(int(attr, 36))
         if attr in self._pool['numToAttrib'].keys():
             attr, param = self._pool['numToAttrib'][attr]
-        else:
+        elif self._pool and self._pad:
             self._pool = self._conn.getAttributePool(self._pad)['pool']
-            if not attr in self._pool['numToAttrib'].keys():
+            return self.get(attr)
+        elif not attr in self._pool['numToAttrib'].keys():
                 raise Exception("Attribute not found:", attr)
+        else:
             attr, param = self._pool['numToAttrib'][attr]
         if param != "false":
             return attr, param
