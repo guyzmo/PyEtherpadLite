@@ -10,7 +10,7 @@ This is just a Proof of Concept of a CLI tracking of etherpadlite.
 
 The API mode `-A` will work only with the etherpad-lite fork over here: 
 
-    https://github.com/guyzmo/etherpad-lite
+    [https://github.com/guyzmo/etherpad-lite](https://github.com/guyzmo/etherpad-lite)
 
 I have extended the API of etherpad in order to be able to have more
 informations from the server, so it can display a local copy of the text
