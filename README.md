@@ -23,6 +23,10 @@ settings.json configuration file for Etherpad-Lite, as follows:
 
     "socketTransportProtocols" : ["xhr-polling", "jsonp-polling", "htmlfile", "websocket"],
 
+And you'll need to use the following SocketIO version:
+
+    [https://github.com/guyzmo/socketIO-client](https://github.com/guyzmo/socketIO-client)
+
 #2 Install or develop
 
 
