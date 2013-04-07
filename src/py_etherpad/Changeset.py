@@ -1,25 +1,20 @@
 #!/usr/bin/env python
 """Reverse engineered EtherpadLite Changeset API."""
 
-import re
-import string
+import logging
+log = logging.getLogger('py_etherpad.Changeset')
 
-def numToStr(num, b=36, numerals=string.digits + string.ascii_lowercase):
-    """
-    Converts integer num into a string representation on base b
-    @param b {int} base to use
-    @param numerals {string} characters used for string representation
-    @returns {string} string representation of num in base b
-    """
-    # http://stackoverflow.com/questions/2267362/convert-integer-to-a-string-in-a-given-numeric-base-in-python
-    return ((num == 0) and numerals[0]) \
-            or (numToStr(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b])
+import re
+
+from utils import num_to_str
+
 def unpack(cs):
     """
     Unpacks a string encoded Changeset into a proper Changeset dict
     @param cs {string} String encoded Changeset
     @returns {dict} a Changeset class
     """
+    log.debug("unpack: %s" % cs)
     header_regex = r"Z:([0-9a-z]+)([><])([0-9a-z]+)|"
     header_match = re.match(header_regex, cs)
     headers = header_match.groups()
@@ -35,12 +30,14 @@ def unpack(cs):
     ops_end     = cs.find("$")
     if ops_end < 0:
         ops_end = len(cs)
-    return {
-                "old_len": old_len,
-                "new_len": new_len,
-                "ops": cs[ops_start:ops_end],
-                "char_bank": cs[ops_end+1:]
-            }
+    csd = {
+            "old_len": old_len,
+            "new_len": new_len,
+            "ops": cs[ops_start:ops_end],
+            "char_bank": cs[ops_end+1:]
+          }
+    log.debug("unpack: returns %s" % csd)
+    return csd
 
 def pack(csd):
     """
@@ -48,10 +45,13 @@ def pack(csd):
     @param cs {dict} a Changeset dict
     @returns {string} String encoded Changeset
     """
+    log.debug("pack: %s" % (csd,))
     len_diff = csd["new_len"] - csd["old_len"]
-    len_diff_str = "<" + numToStr(len_diff) if len_diff >= 0 else "<" + numToStr(-len_diff)
-    a = [ 'Z:', numToStr(csd["old_len"]), len_diff_str, "|", csd["ops"], "$", csd["char_bank"] ]
-    return ''.join(a)
+    len_diff_str = "<" + num_to_str(len_diff) if len_diff >= 0 else "<" + num_to_str(-len_diff)
+    cs = [ 'Z:', num_to_str(csd["old_len"]), len_diff_str, "|", csd["ops"], "$", csd["char_bank"] ]
+    cs = ''.join(cs)
+    log.debug("pack: returns %s" % (cs,))
+    return cs
 
 
 class Changeset:
@@ -64,6 +64,7 @@ class Changeset:
         @params cs {string} String encoded Changeset
         @params str {string} String to which a Changeset should be applied
         """
+        log.debug("apply_to_text: %s, %s" % (cs, repr(txt)))
         unpacked = unpack(cs)
         assert len(txt)+1 in (unpacked['old_len'], unpacked['old_len']+1)
         bank = unpacked['char_bank']
@@ -89,6 +90,7 @@ class Changeset:
         @param optStartIndex {int} from where in the string should the iterator start
         @return {Op} type object iterator
         """
+        log.debug("op_iterator: %s, %s" % (opstr, op_start_idx))
         regex = r"((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=\<\>])([0-9a-z]+)|\?|"
         start_idx = op_start_idx
         curr_idx  = start_idx
@@ -111,6 +113,44 @@ class Changeset:
                             chars=int(regex_res[3], 36))
             else:
                 op = dict(attribs='', lines=0, op_code='', chars=0)
+            log.debug("op_iterator: next op: %s" % op)
             yield op
         return
+
+if __name__ == "__main__":
+    # tests
+    from Text import Text
+    from client import Cursors, Authors
+    from Attributes import Attributes
+    apool = {'nextNum': 5,
+             'numToAttrib': {'1': ['bold', 'true'],
+                             '0': ['author', 'a.zGeBqBBOaN4Fr8Ot'],
+                             '2': ['italic', 'true'],
+                             '3': ['underline', 'true'],
+                             '4': ['strikethrough', 'true']}}
+    attributes = Attributes(pool=apool)
+    changeset = Changeset(attributes)
+
+    attribs = '+j*0+3|2+2*1+4+1*2+3+1*3+4+1*4+2|4+5a'
+    text = "Welcome to Etherpad...\n\nThis pad text is synchronized as you type, so that everyone viewing this page sees the same text. This allows you to collaborate seamlessly on documents!\n\nGet involved with Etherpad at http://etherpad.org"
+
+    csd   = dict(old_len=len(text),
+                 new_len=len(text),
+                 ops=attribs,
+                 char_bank="")
+
+    t = Text(text=text, cursors=Cursors(), attribs=attributes, authors=Authors())
+
+    print csd
+
+    cs = pack(csd)
+
+    csd2 = unpack(cs)
+
+    print csd2
+
+    changeset.apply_to_text(cs, t)
+
+    print t
+
 

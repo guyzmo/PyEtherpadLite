@@ -1,18 +1,25 @@
 #!/usr/bin/env python
 # -+- encoding: utf-8 -+-
 
+import logging
+log = logging.getLogger('py_etherpad.Text')
+
 from Attributes import Attributes
 from Changeset import Changeset
+from Style import Style
+
 
 class TextRepr:
     def __init__(self):
         self.chars = {}
         self.attribs = dict()
         self.authors = dict()
+        self.attrlist = dict()
 
 
 class Text:
     def __init__(self, attribs, authors, cursors, text=None):
+        log.debug("Text()")
         self._t = TextRepr()
 
         self._cursors = cursors
@@ -33,6 +40,7 @@ class Text:
         return self.length()
 
     def insert_at(self, idx, substr, attr=None):
+        log.debug("Text.insert_at(%s, %s, %s)" % (idx, substr, attr))
         ls = len(substr)
         lt = len(self)
         chars = dict()
@@ -59,6 +67,9 @@ class Text:
         self._t.authors = authors
 
     def remove(self, idx, length, attr=None):
+        """
+        """
+        log.debug("Text.remove(%s, %s, %s)" % (idx, length, attr))
         for i in range(idx, len(self)-length):
             j = i+length
             self._t.chars[i] = self._t.chars[j]
@@ -70,6 +81,10 @@ class Text:
             del self._t.authors[i]
 
     def set_attr(self, idx, attribs, length=1):
+        """
+        sets the attribute of character at given line
+        """
+        log.debug("Text.set_attr(%s, %s, %s)" % (idx, attribs, length))
         attr, param = self._attributes.extract(attribs)
         for i in range(idx, idx+length):
             if attr == "list":
@@ -78,7 +93,6 @@ class Text:
                     self._t.attribs[i].remove(("list", atd["list"]))
                 self._t.attribs[i].append((attr, param))
             elif attr.startswith("author"):
-                print i, attr, param
                 self._t.authors[i] = param
             elif param == "true":
                 self._t.attribs[i].append((attr, param))
@@ -89,25 +103,57 @@ class Text:
                     self._t.attribs[i].remove((attr, atd[attr]))
 
     def get_attr(self, idx):
+        """
+        returns the attributes of character at index idx
+        """
+        log.debug("Text.get_attr(%ss)" % (idx,))
         return self._t.attribs[idx]
 
     def set_author(self, idx, author):
+        """
+        sets the author of current character
+        :param idx:
+        :param author:
+        """
+        log.debug("Text.set_author(%s, %s)" % (idx, author))
         self._t.authors[idx] = author
 
     def get_author(self, idx):
-        if  self._authors.has(self._t.authors[idx]):
+        """
+        returns the color of the author of given character
+        :param idx: int being the index of a character in text
+        """
+        log.debug("Text.get_author(%s)" % (idx,))
+        if self._authors.has(self._t.authors[idx]):
             return self._authors.get_color(self._t.authors[idx])
         return self._t.authors[idx]
 
     def update(self, cs):
+        """
+        Updates current text with changeset
+        :param cs: str representation of a changeset
+        """
+        log.debug("Text.update(%s)" % (cs,))
         self._changeset.apply_to_text(cs, self)
 
     def __str__(self):
+        """
+        Outputs current text as plain raw
+        """
         pre = "--------------8<-----------------8<----------------\n"
         post = "\n-------------->8----------------->8----------------"
         return pre + "".join([c for c in self._t.chars.values()]) + post
 
-    def decorated(self):
+    def __repr__(self):
+        return "Text<"+"".join([c for c in self._t.chars.values()])[:15] + ">"
+
+    def decorated(self, style=Style()):
+        """
+        Outputs current text with given style
+        :param style: Style based object
+        :returns str:
+        """
+        log.debug("Text.decorated()")
         state = set()
         author = None
         out = ""
@@ -122,32 +168,39 @@ class Text:
             if self._t.chars[i] == "\n":
                 posy += 1
                 posx = 0
+                pre += style.make_cr()
             if self._cursors.get(posx, posy):
                 a = self._cursors.get(posx, posy)
                 a = self._authors.get_color(a)
                 if not a:
                     aft += "|"
                 else:
-                    aft += "["+str(a)+"]{|}"
+                    a, b = style.make_color(a)
+                    aft += a + "|" + b
             if not author and self.get_author(i):
                 author = self.get_author(i)
-                pre += "["+str(author)+"]{"
+                a, b = style.make_color(author)
+                pre += a
             elif author and self.get_author(i) != author:
-                aft += "}"
+                a, b = style.make_color(author)
+                aft += b
                 author = None
             for attr in self.get_attr(i):
                 if not attr in state:
                     state.add(attr)
                     if attr[1] == "true":
-                        pre += "["+attr[0]+"]{"
+                        a, b = style.make_attr(attr)
+                        pre += a
                     elif attr[0] == "start":
                         continue
                     else:
-                        pre += "["+attr[0]+":"+attr[1]+"]{"
-                        aft += "}"
+                        a, b = style.make_attr(attr)
+                        pre += a
+                        aft += b
                 else:
+                    a, b = style.make_attr(attr)
                     state.remove(attr)
-                    aft += "}"
+                    aft += b
             out += pre + self._t.chars[i] + aft
         return out
 
