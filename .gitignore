@@ -1,3 +1,10 @@
 .idea
 *.pyc
 *.pyo
+*.swp
+var/
+build/
+dist/
+bin/
+.installed.cfg
+*.egg-info
