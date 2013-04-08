@@ -7,8 +7,8 @@ log = logging.getLogger('py_etherpad.client')
 import sys
 import time
 import urllib2
-import cookielib
 import argparse
+import requests
 
 from socketIO_client import SocketIO
 
@@ -21,17 +21,18 @@ from Style import STYLES
 
 def run_socketio(args):
     log.debug("launched as socket.io client")
-    cj = cookielib.CookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    res = opener.open("http://%s:%s/p/%s" % (args.host, args.port, args.pad))
+    res = requests.get("http://%s:%s/p/%s" % (args.host, args.port, args.pad))
 
-    session = res.headers['set-cookie']
+    cookie = res.headers['set-cookie']
+    cookie = dict([(cookie[:cookie.find("=")], cookie[cookie.find("=")+1:])])
 
     def printout(text):
         return text.decorated(style=STYLES[args.style]())
 
     socketIO = SocketIO(args.host, args.port, EtherpadService,
-                                                        session=session,
+                                                        transports=['xhr-polling',
+                                                                    'websocket'],
+                                                        cookies=cookie,
                                                         padid=args.pad,
                                                         cb=printout)
     socketIO.wait()
