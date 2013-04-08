@@ -84,8 +84,8 @@ class Text:
         """
         sets the attribute of character at given line
         """
-        log.debug("Text.set_attr(%s, %s, %s)" % (idx, attribs, length))
         attr, param = self._attributes.extract(attribs)
+        log.debug("Text.set_attr(%s, %s, %s): %s, %s" % (idx, attribs, length, attr, param))
         for i in range(idx, idx+length):
             if attr == "list":
                 atd = dict(self._t.attribs[i])
@@ -97,7 +97,12 @@ class Text:
             elif param == "true":
                 self._t.attribs[i].append((attr, param))
             elif not param:
-                self._t.attribs[i].remove((attr, param))
+                if (attr, param) in self._t.attribs[i]:
+                    self._t.attribs[i].remove((attr, param))
+                elif (attr, "true") in self._t.attribs[i]:
+                    self._t.attribs[i].remove((attr, "true"))
+                else:
+                    log.error("Attribute (%s, %s) not removed for character %d." % (attr, param, i))
                 atd = dict(self._t.attribs[i])
                 if attr in atd.keys():
                     self._t.attribs[i].remove((attr, atd[attr]))
@@ -106,7 +111,7 @@ class Text:
         """
         returns the attributes of character at index idx
         """
-        log.debug("Text.get_attr(%ss)" % (idx,))
+        log.debug("Text.get_attr(%s)" % (idx,))
         return self._t.attribs[idx]
 
     def set_author(self, idx, author):
