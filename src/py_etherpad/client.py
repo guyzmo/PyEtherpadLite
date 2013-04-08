@@ -121,8 +121,10 @@ def run():
     logging.basicConfig()
     if args.debug:
         logging.root.setLevel(logging.DEBUG)
+        logging.getLogger('urllib3').setLevel(logging.INFO)
     else:
         logging.root.setLevel(logging.INFO)
+        logging.getLogger('urllib3').setLevel(logging.WARN)
 
     if args.api:
         run_api(args)
