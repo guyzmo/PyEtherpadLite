@@ -21,13 +21,19 @@ from Style import STYLES
 
 def run_socketio(args):
     log.debug("launched as socket.io client")
+
+    def printout(text):
+        if not text is None:
+            print chr(27) + "[2J" # clear screen
+            t = text.decorated(style=STYLES[args.style]())
+            print "--------8<----------------8<----------------8<---------------8<--------"
+            print t
+            print "-------->8---------------->8---------------->8--------------->8--------"
+
     res = requests.get("http://%s:%s/p/%s" % (args.host, args.port, args.pad))
 
     cookie = res.headers['set-cookie']
     cookie = dict([(cookie[:cookie.find("=")], cookie[cookie.find("=")+1:])])
-
-    def printout(text):
-        return text.decorated(style=STYLES[args.style]())
 
     socketIO = SocketIO(args.host, args.port, EtherpadService,
                                                         transports=['xhr-polling',
