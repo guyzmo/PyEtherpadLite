@@ -24,10 +24,6 @@ from utils import id_generator
 
 class EtherpadDispatch(object):
     def __init__(self):
-        self.events = dict(CLIENT_VARS=self.on_clientvars,
-                    NEW_CHANGES=self.on_new_changes,
-                    USER_NEWINFO=self.on_user_newinfo,
-                    CUSTOM=self.on_custom)
         self.rev = -1
         self.text = ""
         # self.author_name = None
@@ -36,7 +32,7 @@ class EtherpadDispatch(object):
         self.authors = Authors()
         self.cursors = Cursors()
 
-    def on_clientvars(self, data):
+    def on_client_vars(self, data):
         log.debug("on_clientvars: %s" % data)
         vars = data["collab_client_vars"]
 
@@ -125,3 +121,90 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
             if typ == "COLLABROOM" and "type" in msg["data"].keys():
                 typ = msg["data"]["type"]
             log.error("Unknown event %s" % typ) # XXX raise ?
+
+    def send_changeset_req(self, data, granularity, start, request_id):
+        def on_response(self, *args):
+            print "[send_changeset:Response]", args
+        self.socketIO.emit('message', dict(component='pad',
+                                           type="CHANGESET_REQ",
+                                           padId=self.socketIO.params['padid'],
+                                           data=data,
+                                           granularity=granularity,
+                                           start=start,
+                                           requestID=request_id,
+                                           protocolVersion=2), on_response)
+
+    def send_user_changes(self, baseRev, apool, changeset):
+        """
+        :param baseRev: revision on which is based the changeset
+        :param apool: attribute pool of all used attributes in the changeset
+        :param changeset: packed string representing of a changeset object
+        """
+        def on_response(self, *args):
+            print "[send_user_change:Response]", args
+        self.socketIO.emit('message', dict(component='pad',
+                                           type="COLLABROOM",
+                                           padId=self.socketIO.params['padid'],
+                                           data=dict(type="USER_CHANGES",
+                                                     baseRev=baseRev,
+                                                     apool=apool,
+                                                     changeset=changeset),
+                                           protocolVersion=2), on_response)
+
+    def send_userinfo_update(self, name, colorId):
+        def on_response(self, *args):
+            print "[send_userinfo_update:Response]", args
+        self.socketIO.emit('message', dict(component='pad',
+                                           type="COLLABROOM",
+                                           padId=self.socketIO.params['padid'],
+                                           data=dict(type="USERINFO_UPDATE",
+                                                     userInfo=dict(name=name,
+                                                                   colorId=colorId)
+                                                     ),
+                                           protocolVersion=2), on_response)
+
+    def send_chat_message(self, text):
+        def on_response(self, *args):
+            print "[send_changeset:Response]", args
+        self.socketIO.emit('message', dict(component='pad',
+                                           type="COLLABROOM",
+                                           data=dict(type="CHAT_MESSAGE",
+                                                     text=text),
+                                           padId=self.socketIO.params['padid'],
+                                           protocolVersion=2), on_response)
+
+    def send_get_chat_messages(self, start, end):
+        def on_response(self, *args):
+            print "[send_changeset:send_get_chat_message]", args
+        self.socketIO.emit('message', dict(component='pad',
+                                           type="COLLABROOM",
+                                           data=dict(type="GET_CHAT_MESSAGES",
+                                                     start=start, end=end),
+                                           padId=self.socketIO.params['padid'],
+                                           protocolVersion=2), on_response)
+
+    def send_save_revision(self, data):
+        def on_response(self, *args):
+            print "[send_save_revision:Response]", args
+        self.socketIO.emit('message', dict(component='pad',
+                                           type="COLLABROOM",
+                                           data=dict(type="SAVE_REVISION"),
+                                           padId=self.socketIO.params['padid'],
+                                           protocolVersion=2), on_response)
+
+    def send_client_message(self, data):
+        def on_response(self, *args):
+            print "[send_client_message:Response]", args
+        self.socketIO.emit('message', dict(component='pad',
+                                           type="COLLABROOM",
+                                           padId=self.socketIO.params['padid'],
+                                           data=dict(
+                                                  type="CLIENT_MESSAGE",
+                                                  payload=dict(
+                                                      type="suggestUserName",
+                                                      newName=name,
+                                                      unnamedId=authorid
+                                                  )
+                                           ),
+                                           protocolVersion=2), on_response)
+
