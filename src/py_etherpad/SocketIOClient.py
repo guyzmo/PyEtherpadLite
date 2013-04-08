@@ -25,7 +25,7 @@ from utils import id_generator
 class EtherpadDispatch(object):
     def __init__(self):
         self.rev = -1
-        self.text = ""
+        self.text = None
         self.authors = Authors()
         self.cursors = Cursors()
         self.color = None
@@ -53,6 +53,7 @@ class EtherpadDispatch(object):
             name = d['name'] if 'name' in d.keys() else author
             self.authors.add(author, name=name, color=d['colorId'], padIDs=d['padIDs'])
         self.authors.set_color_palette(data["colorPalette"])
+
     def on_new_changes(self, data):
         log.debug("on_new_changes: %s" % data)
         newRev = data["newRev"]
@@ -64,6 +65,7 @@ class EtherpadDispatch(object):
             self.text.update(changeset)
         else:
             log.error("ERROR: new revision prior to current revision")
+
     def on_user_newinfo(self, data):
         log.debug("on_user_newinfo: %s" % data)
         userid = data["userInfo"]["userId"]
@@ -73,6 +75,10 @@ class EtherpadDispatch(object):
         colorid = data["userInfo"]["colorId"]
         self.authors.add(userid, name=name, color=colorid)
         log.debug("new author: %s (id:%s, color:%s)" % (name, userid, colorid))
+
+    def on_user_leave(self, data):
+        log.debug("on_user_leave: %s" % data)
+
     def on_custom(self, data):
         if data["payload"]["action"] == "cursorPosition":
             log.debug("on_custom:cursorPosition: %s" % data)
@@ -85,44 +91,83 @@ class EtherpadDispatch(object):
                                                                         authorName,
                                                                         locationX,
                                                                         locationY))
+        elif data["payload"]["action"] == "requestRTC":
+            message = {
+                "type" : 'RTC',
+                "action" : 'declineRTC',
+                "padId" : data["payload"]["padId"],
+                "targetAuthorId" : data["payload"]["targetAuthorId"],
+                "myAuthorId" : data["payload"]["authorId"]
+            }
+            def on_response(self, *args):
+                print "[requestRTC:Response]", args
+            self.socketIO.emit('message', dict(component='pad',
+                                            type="CUSTOM",
+                                            padId=self.socketIO.params['padid'],
+                                            data=dict(payload=message),
+                                            protocolVersion=2), on_response)
+
+
 
 class EtherpadService(BaseNamespace, EtherpadDispatch):
     def __init__(self, *args, **kwarg):
         BaseNamespace.__init__(self, *args, **kwarg)
         EtherpadDispatch.__init__(self)
+        self.connected = False
+
+    # Events listening
+
     def on_authorization(self, *args):
         log.debug('[Auth] %s' % (args,))
+
     def on_connect(self, socketIO):
         log.debug('[Connected]')
+        self.connected = True
+        self.send_client_ready()
+
+    def on_close(self, *args):
+        """Function that can handle graceful shutdown… if needed"""
+        self.socketIO.transport.close()
+
+    def on_disconnect(self):
+        log.info('[Disconnected]')
+
+    def on_noop(self):
+        if not self.connected:
+            log.warn("[Reconnecting]")
+            self.socketIO.reconnect()
+
+
+    def on_error(self, *args):
+        log.error('[Error] %s' % (args,))
+
+    def on_message(self, msg):
+        log.debug('[Message] %s:' % (msg["type"]),)
+
+        typ = msg["type"]
+        if typ == "COLLABROOM" and "type" in msg["data"].keys():
+            typ = msg["data"]["type"]
+
+        if hasattr(EtherpadDispatch, "on_"+typ.lower()):
+            getattr(EtherpadDispatch, "on_"+typ.lower())(self, msg["data"])
+            self.socketIO.params["cb"](self.text)
+        else:
+            log.error("Unknown event '%s': missing '%s()' method." % (typ,
+                                                            "on_"+typ.lower()))
+
+    # Events sending
+
+    def send_client_ready(self):
         def on_response(self, *args):
             print "[Connected:Response]", args
-        socketIO.emit('message', dict(component='pad',
+
+        self.socketIO.emit('message', dict(component='pad',
                                            type="CLIENT_READY",
-                                           padId=socketIO.params['padid'],
+                                           padId=self.socketIO.params['padid'],
                                            sessionID=None,
                                            password=None,
                                            token="t.%s" % (id_generator(20),),
                                            protocolVersion=2), on_response)
-    def on_disconnect(self):
-        log.info('[Disconnected]')
-    def on_error(self, data):
-        log.error('[Error] %s' % (data,))
-    def on_message(self, msg):
-        print chr(27) + "[2J" # clear screen
-        log.debug('[Message] %s:' % (msg["type"]),)
-        if msg["type"] in self.events.keys():
-            self.events[msg["type"]](msg["data"])
-        elif msg["type"] == "COLLABROOM" and msg["data"]["type"] in self.events.keys():
-            self.events[msg["data"]["type"]](msg["data"])
-            ret = self.socketIO.params["cb"](self.text)
-            print "--------8<-------------------8<-----------"
-            print ret
-            print "-------->8------------------->8-----------"
-        else:
-            typ = msg["type"]
-            if typ == "COLLABROOM" and "type" in msg["data"].keys():
-                typ = msg["data"]["type"]
-            log.error("Unknown event %s" % typ) # XXX raise ?
 
     def send_changeset_req(self, data, granularity, start, request_id):
         def on_response(self, *args):
