@@ -26,11 +26,10 @@ class EtherpadDispatch(object):
     def __init__(self):
         self.rev = -1
         self.text = ""
-        # self.author_name = None
-        # self.author_userid = None
-        # self.author_colorid = None
         self.authors = Authors()
         self.cursors = Cursors()
+        self.color = None
+        self.user_id = None
 
     def on_client_vars(self, data):
         log.debug("on_clientvars: %s" % data)
@@ -42,6 +41,8 @@ class EtherpadDispatch(object):
                      ops=vars["initialAttributedText"]["attribs"],
                      char_bank="")
         apool = vars["apool"]
+        self.color = data["userColor"]
+        self.user_id = data["userId"]
 
         self.text = Text(text=text, cursors=self.cursors, attribs=Attributes(pool=apool), authors=self.authors)
         csd = pack(csd)
@@ -49,7 +50,8 @@ class EtherpadDispatch(object):
 
         self.rev           = vars["rev"]
         for author, d in vars["historicalAuthorData"].iteritems():
-            self.authors.add(author, name=d['name'], color=d['colorId'], padIDs=d['padIDs'])
+            name = d['name'] if 'name' in d.keys() else author
+            self.authors.add(author, name=name, color=d['colorId'], padIDs=d['padIDs'])
         self.authors.set_color_palette(data["colorPalette"])
     def on_new_changes(self, data):
         log.debug("on_new_changes: %s" % data)
