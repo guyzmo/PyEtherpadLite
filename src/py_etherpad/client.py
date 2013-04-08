@@ -30,7 +30,7 @@ def run_socketio(args):
             print t
             print "-------->8---------------->8---------------->8--------------->8--------"
 
-    res = requests.get("http://%s:%s/p/%s" % (args.host, args.port, args.pad))
+    res = requests.get("http://%s:%s/%s%s" % (args.host, args.port, args.path, args.pad))
 
     cookie = res.headers['set-cookie']
     cookie = dict([(cookie[:cookie.find("=")], cookie[cookie.find("=")+1:])])
@@ -49,6 +49,11 @@ def run_socketio(args):
 
 def run_api(args):
     log.debug("launched as API client")
+
+    if not args.apikey:
+        log.error("Missing API Key!")
+        sys.exit(1)
+
     mypad = APIClient(args.apikey, "http://%s:%s/api" % (args.host,
                                                                    args.port))
 
@@ -94,6 +99,9 @@ def run():
     parser.add_argument("-P", "--port",
                         dest="port",
                         default="9001")
+    parser.add_argument("--path",
+                        dest="path",
+                        default="p/")
 
     parser.add_argument("-r", "--refresh",
                         dest="refresh",
