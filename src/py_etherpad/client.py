@@ -35,13 +35,16 @@ def run_socketio(args):
     cookie = res.headers['set-cookie']
     cookie = dict([(cookie[:cookie.find("=")], cookie[cookie.find("=")+1:])])
 
-    socketIO = SocketIO(args.host, args.port, EtherpadService,
-                                                        transports=['xhr-polling',
-                                                                    'websocket'],
-                                                        cookies=cookie,
-                                                        padid=args.pad,
-                                                        cb=printout)
-    socketIO.wait()
+    reconnect = True
+    while reconnect:
+        socketIO = SocketIO(args.host, args.port, EtherpadService,
+                                                            transports=['xhr-polling',
+                                                                        'websocket'],
+                                                            cookies=cookie,
+                                                            padid=args.pad,
+                                                            cb=printout)
+        reconnect = socketIO.wait()
+        del socketIO
 
 
 def run_api(args):

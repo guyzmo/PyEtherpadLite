@@ -135,7 +135,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
     def on_noop(self):
         if not self.connected:
             log.warn("[Reconnecting]")
-            self.socketIO.reconnect()
+            self.socketIO.disconnect(reconnect = True)
 
 
     def on_error(self, *args):
