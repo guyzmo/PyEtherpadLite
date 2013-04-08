@@ -17,9 +17,9 @@ class Authors(object):
         self._authors[a] = dict(name=name, color=color, padIDs=padIDs)
 
     def get_color(self, a):
-        log.debug("get_color")
+        log.debug("get_color(%s)" % a)
         if self._authors[a]['color'] in self._color_palette:
-            return self._color_palette[self._authors[a]['color']]
+            return self._authors[a]['color']
         return self._color_palette[0]
 
     def get_name(self, a):
