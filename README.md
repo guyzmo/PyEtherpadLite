@@ -63,5 +63,5 @@ Apache License
 
 #4 Credit
 
-Thanks to devjones, from who I have forked the project
+Thanks to devjones, from whom I have forked the project
 This python client was inspired by TomNomNom's php client which can be found at: https://github.com/TomNomNom/etherpad-lite-client
