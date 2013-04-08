@@ -11,6 +11,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     install_requires = [
+        "requests",
         "socketIO-client"
     ],
     entry_points="""
