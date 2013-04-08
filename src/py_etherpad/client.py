@@ -105,7 +105,7 @@ def run():
     parser.add_argument("-s", "--style",
                         dest="style",
                         choices=STYLES.keys(),
-                        default=STYLES['Default'])
+                        default='Default')
 
     parser.add_argument("-v",
                         "--verbose",
