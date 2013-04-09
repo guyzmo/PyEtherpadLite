@@ -177,7 +177,12 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
         log.error('[Error] %s' % (args,))
 
     def on_message(self, msg):
-        log.debug('[Message] %s:' % (msg["type"]),)
+        log.debug('[Message] %s:' % (msg),)
+
+        if 'disconnect' in msg.keys():
+            log.error('on_message: %s' % msg['disconnect'])
+            self.socketIO.disconnect()
+            return
 
         typ = msg["type"]
         if typ == "COLLABROOM" and "type" in msg["data"].keys():
