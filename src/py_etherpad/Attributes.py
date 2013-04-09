@@ -36,6 +36,9 @@ class Attributes:
             return True
         return False
 
+    def get_pool(self):
+        return self._pool
+
     def apply(self, text):
         char_dict = {}
         for i in range(0, len(text)):

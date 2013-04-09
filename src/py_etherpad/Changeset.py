@@ -5,8 +5,83 @@ import logging
 log = logging.getLogger('py_etherpad.Changeset')
 
 import re
+from difflib import SequenceMatcher
 
 from utils import num_to_str
+
+def op_code_match(opcode, a0, a1, b0, b1, csd, sm):
+    if opcode == 'equal':
+        nls = [a0+m.start() for m in re.finditer('\n', sm.b[a0:a1])]
+        if len(nls) > 0:
+            # "|L=N" : Keep N characters from the source text,
+            #          containing L newlines. The last character kept
+            #          MUST be a newline, and the final newline of
+            #          the document is allowed.
+            if nls[-1] == b1:
+                # if ends with a newline
+                csd["ops"] += '|'+num_to_str(len(nls))
+                csd["ops"] += '='+num_to_str(a1-a0)
+            else:
+                # if ends with not a newline
+                csd["ops"] += '|'+num_to_str(len(nls))
+                csd["ops"] += '='+num_to_str(nls[-1]-a0)
+                op_code_match('equal', nls[-1]+1, a1, b0, b1, csd, sm)
+        else:
+            # "=N" : Keep N characters from the source text,
+            #        none of them newlines
+            csd["ops"] += '='+num_to_str(a1-a0)
+
+    elif opcode == 'insert':
+        nls = [b0+m.start() for m in re.finditer('\n', sm.b[b0:b1])]
+        if len(nls) > 0:
+            # "|L+N" : Insert N characters from the source text,
+            #          containing L newlines. The last character
+            #          inserted MUST be a newline, but not the
+            #          (new) document's final newline.
+            if nls[-1] == b1:
+                # if ends with a newline
+                csd["ops"] += '|'+num_to_str(len(nls))
+                csd["ops"] += '+'+num_to_str(b1-b0)
+                csd["char_bank"] += sm.b[b0:b1]
+            else:
+                # if ends with not a newline
+                csd["ops"] += '|'+num_to_str(len(nls)-1)
+                csd["ops"] += '+'+num_to_str(nls[-1]-b0)
+                csd["char_bank"] += sm.b[b0:nls[-1]]
+                op_code_match('insert', a0, a1, nls[-1]+1, b1, csd, sm)
+        else:
+            # "+N" : Insert N characters from the bank,
+            #        none of them newlines
+            csd["ops"] += '+'+num_to_str(b1-b0)
+            csd["char_bank"] += sm.b[b0:b1]
+
+    elif opcode == 'delete':
+        nls = [b0+m.start() for m in re.finditer('\n', sm.b[b0:b1])]
+        if len(nls) > 0:
+            # "|L-N" : Delete N characters from the source text,
+            #          containing L newlines. The last character
+            #          inserted MUST be a newline, but not the (old)
+            #          document's final newline.
+            if nls[-1] == b1:
+                # if ends with a newline
+                csd["ops"] += '|'+num_to_str(len(nls))
+                csd["ops"] += '-'+num_to_str(b1-b0)
+            else:
+                # if ends with not a newline
+                csd["ops"] += '|'+num_to_str(len(nls)-1)
+                csd["ops"] += '-'+num_to_str(nls[-1]-b0)
+                op_code_match('insert', a0, a1, nls[-1]+1, b1, csd, sm)
+        else:
+            # "-N" : Skip over (delete) N characters from
+            #        the source text, none of them newlines
+            length = a1-a0
+            csd["ops"] += '-'+num_to_str(a1-a0)
+
+    elif opcode == 'replace':
+        # remove then add
+        op_code_match('delete', a0, a1, b0, b0, csd, sm)
+        op_code_match('insert', a0, a0, b0, b1, csd, sm)
+
 
 def unpack(cs):
     """
@@ -57,6 +132,22 @@ def pack(csd):
 class Changeset:
     def __init__(self, attr):
         self._attribs = attr
+
+    def get_from_text(self, old, new):
+        """
+        Gets the differences between `old` text and `new` text and returns a changeset
+        :param old: old Text object
+        :param new: new text string
+        """
+        old = str(old)
+        sm = SequenceMatcher(None, old, new)
+        csd = dict(old_len=len(old),
+                    new_len=len(new),
+                    ops="",
+                    char_bank="")
+        for opcode, a0, a1, b0, b1 in sm.get_opcodes():
+            op_code_match(opcode, a0, a1, b0, b1, csd, sm)
+        return csd
 
     def apply_to_text(self, cs, txt):
         """

@@ -121,6 +121,9 @@ class Text:
         log.debug("Text.get_attr(%s)" % (idx,))
         return self._t.attribs[idx]
 
+    def get_apool(self):
+        return self._attributes.get_pool()
+
     def set_author(self, idx, author):
         """
         sets the author of current character
@@ -148,13 +151,17 @@ class Text:
         log.debug("Text.update(%s)" % (cs,))
         self._changeset.apply_to_text(cs, self)
 
+    def diff(self, other):
+        """
+        """
+        log.debug("diff(%s)" % (other,))
+        return self._changeset.get_from_text(self, other)
+
     def __str__(self):
         """
         Outputs current text as plain raw
         """
-        pre = "--------------8<-----------------8<----------------\n"
-        post = "\n-------------->8----------------->8----------------"
-        return pre + "".join([c for c in self._t.chars.values()]) + post
+        return "".join([c for c in self._t.chars.values()])
 
     def __repr__(self):
         return "Text<"+"".join([c for c in self._t.chars.values()])[:15] + ">"

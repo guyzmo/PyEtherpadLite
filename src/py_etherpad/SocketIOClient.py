@@ -57,6 +57,10 @@ class EtherpadIO(object):
     def pause(self):
         self.epad.pause()
 
+    def patch_text(self, old, new):
+        cs = pack(old.diff(new))
+        self.epad.namespace.send_user_changes(old.get_revision(), old.get_apool(), cs)
+
 
 class EtherpadDispatch(object):
     def __init__(self):
@@ -144,7 +148,6 @@ class EtherpadDispatch(object):
                                             protocolVersion=2), on_response)
 
 
-
 class EtherpadService(BaseNamespace, EtherpadDispatch):
     def __init__(self, *args, **kwarg):
         BaseNamespace.__init__(self, *args, **kwarg)
@@ -228,7 +231,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
         :param changeset: packed string representing of a changeset object
         """
         def on_response(self, *args):
-            print "[send_user_change:Response]", args
+            print "[send_user_changes:Response]", args
         self.socketIO.emit('message', dict(component='pad',
                                            type="COLLABROOM",
                                            padId=self.socketIO.params['padid'],
