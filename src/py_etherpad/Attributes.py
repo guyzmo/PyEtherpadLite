@@ -28,9 +28,6 @@ class Attributes:
             return attr, param
         return attr, False
 
-    def update(self, attr, text):
-        return "[" + attr + "]{" + text + "}"
-
     def reset_list(self, idx):
         if idx in self._attrlists.keys():
             params = tuple((idx,) + self._attrlists[idx])
