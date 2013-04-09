@@ -18,7 +18,7 @@ from utils import id_generator
 
 class EtherpadIO(object):
     def __init__(self, pad, cb, host='localhost', path='p/', port='9001', verbose = False,
-                                transports=['xhr-polling', 'websocket']):
+                                transports=['xhr-polling', 'websocket'], **kwarg):
         res = requests.get("http://%s:%s/%s%s" % (host, port, path, pad))
 
         cookie = res.headers['set-cookie']
@@ -29,6 +29,7 @@ class EtherpadIO(object):
         self.host = host
         self.path = path
         self.port = port
+        self.kwarg = kwarg
         self.transports = transports
         self.__init()
 
@@ -38,7 +39,7 @@ class EtherpadIO(object):
                         transports=self.transports,
                         cookies=self.cookie,
                         padid=self.pad,
-                        cb=self.cb)
+                        cb=self.cb, **self.kwarg)
 
     def wait(self):
         reconnect = True
