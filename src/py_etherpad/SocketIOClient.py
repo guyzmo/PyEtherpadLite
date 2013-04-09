@@ -60,7 +60,6 @@ class EtherpadIO(object):
 
 class EtherpadDispatch(object):
     def __init__(self):
-        self.rev = -1
         self.text = None
         self.authors = Authors()
         self.cursors = Cursors()
@@ -84,7 +83,7 @@ class EtherpadDispatch(object):
         csd = pack(csd)
         self.text.update(csd)
 
-        self.rev           = vars["rev"]
+        self.text.set_revision(int(vars["rev"]))
         for author, d in vars["historicalAuthorData"].iteritems():
             name = d['name'] if 'name' in d.keys() else author
             self.authors.add(author, name=name, color=d['colorId'], padIDs=d['padIDs'])
@@ -92,13 +91,14 @@ class EtherpadDispatch(object):
 
     def on_new_changes(self, data):
         log.debug("on_new_changes: %s" % data)
-        newRev = data["newRev"]
+        newRev = int(data["newRev"])
         changeset = data["changeset"]
         if 'apool' in data.keys():
             self.text._attributes._pool = data['apool']
-        if newRev > self.rev:
+        if newRev > self.text.get_revision():
             log.debug("apply changeset %s at rev %s" % (changeset, newRev))
             self.text.update(changeset)
+            self.text.set_revision(rev)
         else:
             log.error("ERROR: new revision prior to current revision")
 

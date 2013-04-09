@@ -26,6 +26,7 @@ class Text:
         self._authors = authors
         self._attributes = attribs
         self._changeset = Changeset(self._attributes)
+        self._revision = -1
 
         if text:
             for i in range(0, len(text)):
@@ -38,6 +39,12 @@ class Text:
 
     def __len__(self):
         return self.length()
+
+    def get_revision(self):
+        return self._revision
+
+    def set_revision(self, rev):
+        self._revision = rev
 
     def insert_at(self, idx, substr, attr=None):
         log.debug("Text.insert_at(%s, %s, %s)" % (idx, substr, attr))
