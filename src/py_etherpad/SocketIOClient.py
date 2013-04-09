@@ -4,23 +4,59 @@
 import logging
 log = logging.getLogger('py_etherpad.client')
 
-import sys
-import time
 import string
-import random
-import urllib2
-import cookielib
-import argparse
+import requests
 
 from socketIO_client import SocketIO, BaseNamespace
 
-from EtherpadLiteClient import APIClient
 from Text import Text
 from Attributes import Attributes
 from Changeset import pack
 from Cursors import Cursors
 from Authors import Authors
 from utils import id_generator
+
+class EtherpadIO(object):
+    def __init__(self, pad, cb, host='localhost', path='p/', port='9001', verbose = False,
+                                transports=['xhr-polling', 'websocket']):
+        res = requests.get("http://%s:%s/%s%s" % (host, port, path, pad))
+
+        cookie = res.headers['set-cookie']
+        self.cookie = dict([(cookie[:cookie.find("=")], cookie[cookie.find("=")+1:])])
+
+        self.pad = pad
+        self.cb = cb
+        self.host = host
+        self.path = path
+        self.port = port
+        self.transports = transports
+        self.__init()
+
+    def __init(self):
+        self.epad = SocketIO(self.host, self.port,
+                        EtherpadService,
+                        transports=self.transports,
+                        cookies=self.cookie,
+                        padid=self.pad,
+                        cb=self.cb)
+
+    def wait(self):
+        reconnect = True
+        while reconnect:
+            reconnect = self.epad.wait()
+            del self.epad
+            if reconnect:
+                self.__init()
+
+    def has_ended(self):
+        return self.epad.has_ended()
+
+    def stop(self):
+        self.epad.disconnect()
+
+    def pause(self):
+        self.epad.pause()
+
 
 class EtherpadDispatch(object):
     def __init__(self):
@@ -136,7 +172,6 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
         if not self.connected:
             log.warn("[Reconnecting]")
             self.socketIO.disconnect(reconnect = True)
-
 
     def on_error(self, *args):
         log.error('[Error] %s' % (args,))

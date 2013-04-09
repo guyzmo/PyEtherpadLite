@@ -11,7 +11,7 @@ from Changeset import Changeset
 from Attributes import Attributes
 
 from APIClient import APIClient
-from SocketIOClient import EtherpadService
+from SocketIOClient import EtherpadService, EtherpadIO
 
 from client import run as cli
 
