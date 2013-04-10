@@ -208,40 +208,4 @@ class Changeset:
             yield op
         return
 
-if __name__ == "__main__":
-    # tests
-    from Text import Text
-    from client import Cursors, Authors
-    from Attributes import Attributes
-    apool = {'nextNum': 5,
-             'numToAttrib': {'1': ['bold', 'true'],
-                             '0': ['author', 'a.zGeBqBBOaN4Fr8Ot'],
-                             '2': ['italic', 'true'],
-                             '3': ['underline', 'true'],
-                             '4': ['strikethrough', 'true']}}
-    attributes = Attributes(pool=apool)
-    changeset = Changeset(attributes)
-
-    attribs = '+j*0+3|2+2*1+4+1*2+3+1*3+4+1*4+2|4+5a'
-    text = "Welcome to Etherpad...\n\nThis pad text is synchronized as you type, so that everyone viewing this page sees the same text. This allows you to collaborate seamlessly on documents!\n\nGet involved with Etherpad at http://etherpad.org"
-
-    csd   = dict(old_len=len(text),
-                 new_len=len(text),
-                 ops=attribs,
-                 char_bank="")
-
-    t = Text(text=text, cursors=Cursors(), attribs=attributes, authors=Authors())
-
-    print csd
-
-    cs = pack(csd)
-
-    csd2 = unpack(cs)
-
-    print csd2
-
-    changeset.apply_to_text(cs, t)
-
-    print t
-
 
