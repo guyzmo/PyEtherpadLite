@@ -133,6 +133,16 @@ class Text:
         log.debug("Text.set_author(%s, %s)" % (idx, author))
         self._t.authors[idx] = author
 
+    def get_author_idx(self, idx):
+        """
+        returns the color of the author of given character
+        :param idx: int being the index of a character in text
+        """
+        log.debug("Text.get_author_idx(%s): %s" % (idx,self._authors.get_color_idx(self._t.authors[idx])))
+        if self._authors.has(self._t.authors[idx]):
+            return self._authors.get_color_idx(self._t.authors[idx])
+        return 0
+
     def get_author(self, idx):
         """
         returns the color of the author of given character

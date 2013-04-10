@@ -22,6 +22,13 @@ class Authors(object):
             return self._authors[a]['color']
         return self._color_palette[0]
 
+    def get_color_idx(self, a):
+        if not a:
+            return 0
+        if self._authors[a]['color'] in self._color_palette:
+            return self._color_palette.index(_authors[a]['color'])
+        return 0
+
     def get_name(self, a):
         log.debug("get_name")
         return self._authors[a]['name']
