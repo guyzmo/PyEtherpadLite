@@ -103,7 +103,7 @@ class EtherpadDispatch(object):
         if newRev > self.text.get_revision():
             log.debug("apply changeset %s at rev %s" % (changeset, newRev))
             self.text.update(changeset)
-            self.text.set_revision(rev)
+            self.text.set_revision(newRev)
         else:
             log.error("ERROR: new revision prior to current revision")
 
