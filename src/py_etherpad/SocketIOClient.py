@@ -171,6 +171,8 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def on_disconnect(self):
         log.info('[Disconnected]')
+        if 'disc_cb' in self.socketIO.params:
+            self.socketIO.params['disc_cb']()
 
     def on_noop(self):
         if not self.connected:
@@ -186,6 +188,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
         if 'disconnect' in msg.keys():
             log.error('on_message: %s' % msg['disconnect'])
             self.socketIO.disconnect()
+            self.on_disconnect()
             return
 
         typ = msg["type"]
