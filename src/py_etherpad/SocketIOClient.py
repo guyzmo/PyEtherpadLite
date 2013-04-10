@@ -17,9 +17,15 @@ from Authors import Authors
 from utils import id_generator
 
 class EtherpadIO(object):
-    def __init__(self, pad, cb, host='localhost', path='p/', port='9001', verbose = False,
-                                transports=['xhr-polling', 'websocket'], **kwarg):
-        res = requests.get("http://%s:%s/%s%s" % (host, port, path, pad))
+    def __init__(self, pad, cb,
+                       host='localhost', path='p/', port='9001', secure=False,
+                       verbose = False,
+                       transports=['xhr-polling', 'websocket'],
+                       **kwarg):
+        print "%s://%s:%s/%s%s" % ('https' if secure else 'http', host,
+                                                  port, path, pad)
+        res = requests.get("%s://%s:%s/%s%s" % ('https' if secure else 'http',
+                                                  host, port, path, pad))
 
         cookie = res.headers['set-cookie']
         self.cookie = dict([(cookie[:cookie.find("=")], cookie[cookie.find("=")+1:])])
@@ -29,6 +35,7 @@ class EtherpadIO(object):
         self.host = host
         self.path = path
         self.port = port
+        self.secure = secure
         self.kwarg = kwarg
         self.transports = transports
         self.__init()
@@ -36,6 +43,7 @@ class EtherpadIO(object):
     def __init(self):
         self.epad = SocketIO(self.host, self.port,
                         EtherpadService,
+                        secure=self.secure,
                         transports=self.transports,
                         cookies=self.cookie,
                         padid=self.pad,
