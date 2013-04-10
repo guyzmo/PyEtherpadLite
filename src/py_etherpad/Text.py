@@ -100,6 +100,7 @@ class Text:
                     self._t.attribs[i].remove(("list", atd["list"]))
                 self._t.attribs[i].append((attr, param))
             elif attr.startswith("author"):
+                log.debug("Text.set_attr(%s): Author(%s)" % (i, param))
                 self._t.authors[i] = param
             elif param == "true":
                 self._t.attribs[i].append((attr, param))
@@ -118,7 +119,7 @@ class Text:
         """
         returns the attributes of character at index idx
         """
-        log.debug("Text.get_attr(%s)" % (idx,))
+        log.debug("Text.get_attr(%s): %s" % (idx, str(self._t.attribs[idx])))
         return self._t.attribs[idx]
 
     def get_char(self, idx):
@@ -146,14 +147,22 @@ class Text:
             return self._authors.get_color_idx(self._t.authors[idx])
         return 0
 
+    def get_author_color(self, idx):
+        """
+        returns the color of the author of given character
+        :param idx: int being the index of a character in text
+        """
+        log.debug("Text.get_author_color(%s): %s/%s" % (idx,
+                                                        self._t.authors[idx],
+                                                        self._authors.get_color(self._t.authors[idx])))
+        return self._authors.get_color(self._t.authors[idx])
+
     def get_author(self, idx):
         """
         returns the color of the author of given character
         :param idx: int being the index of a character in text
         """
         log.debug("Text.get_author(%s)" % (idx,))
-        if self._authors.has(self._t.authors[idx]):
-            return self._authors.get_color(self._t.authors[idx])
         return self._t.authors[idx]
 
     def update(self, cs):

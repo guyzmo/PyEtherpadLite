@@ -17,16 +17,21 @@ class Authors(object):
         self._authors[a] = dict(name=name, color=color, padIDs=padIDs)
 
     def get_color(self, a):
-        log.debug("get_color(%s)" % a)
-        if self._authors[a]['color'] in self._color_palette:
-            return self._authors[a]['color']
-        return self._color_palette[0]
+        log.debug("get_color(%s)" % (a,))
+        if not a or not self._authors[a]['color']:
+            return '#000000'
+        if self._authors[a]['color'] < len(self._color_palette):
+            return self._color_palette[self._authors[a]['color']]
+        return self._authors[a]['color']
 
     def get_color_idx(self, a):
+        log.debug('get_color_idx(%s)' % a)
         if not a:
             return 0
         if self._authors[a]['color'] in self._color_palette:
+            log.debug('get_color_idx(%s): %s' % (a, self._color_palette.index(_authors[a]['color'])))
             return self._color_palette.index(_authors[a]['color'])
+        log.debug('get_color_idx(%s): NOT IN PALETTE' % a)
         return 0
 
     def get_name(self, a):
