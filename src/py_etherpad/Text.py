@@ -121,6 +121,9 @@ class Text:
         log.debug("Text.get_attr(%s)" % (idx,))
         return self._t.attribs[idx]
 
+    def get_char(self, idx):
+        return self._t.chars[idx]
+
     def get_apool(self):
         return self._attributes.get_pool()
 
