@@ -91,29 +91,29 @@ class Text:
         """
         sets the attribute of character at given line
         """
-        attr, param = self._attributes.extract(attribs)
-        log.debug("Text.set_attr(%s, %s, %s): %s, %s" % (idx, attribs, length, attr, param))
-        for i in range(idx, idx+length):
-            if attr == "list":
-                atd = dict(self._t.attribs[i])
-                if "list" in atd.keys():
-                    self._t.attribs[i].remove(("list", atd["list"]))
-                self._t.attribs[i].append((attr, param))
-            elif attr.startswith("author"):
-                log.debug("Text.set_attr(%s): Author(%s)" % (i, param))
-                self._t.authors[i] = param
-            elif param == "true":
-                self._t.attribs[i].append((attr, param))
-            elif not param:
-                if (attr, param) in self._t.attribs[i]:
-                    self._t.attribs[i].remove((attr, param))
-                elif (attr, "true") in self._t.attribs[i]:
-                    self._t.attribs[i].remove((attr, "true"))
-                else:
-                    log.error("Attribute (%s, %s) not removed for character %d." % (attr, param, i))
-                atd = dict(self._t.attribs[i])
-                if attr in atd.keys():
-                    self._t.attribs[i].remove((attr, atd[attr]))
+        for attr, param in self._attributes.extract(attribs):
+            log.debug("Text.set_attr(%s, %s, %s): %s, %s" % (idx, attribs, length, attr, param))
+            for i in range(idx, idx+length):
+                if attr == "list":
+                    atd = dict(self._t.attribs[i])
+                    if "list" in atd.keys():
+                        self._t.attribs[i].remove(("list", atd["list"]))
+                    self._t.attribs[i].append((attr, param))
+                elif attr.startswith("author"):
+                    log.debug("Text.set_attr(%s): Author(%s)" % (i, param))
+                    self._t.authors[i] = param
+                elif param == "true":
+                    self._t.attribs[i].append((attr, param))
+                elif not param:
+                    if (attr, param) in self._t.attribs[i]:
+                        self._t.attribs[i].remove((attr, param))
+                    elif (attr, "true") in self._t.attribs[i]:
+                        self._t.attribs[i].remove((attr, "true"))
+                    else:
+                        log.error("Attribute (%s, %s) not removed for character %d." % (attr, param, i))
+                    atd = dict(self._t.attribs[i])
+                    if attr in atd.keys():
+                        self._t.attribs[i].remove((attr, atd[attr]))
 
     def get_attr(self, idx):
         """

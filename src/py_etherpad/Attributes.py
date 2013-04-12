@@ -100,5 +100,5 @@ class Attributes:
 
     def extract(self, attr):
         for attr in attr.split("*")[1:]:
-            return self.get(attr)
+            yield self.get(attr)
 
