@@ -28,6 +28,13 @@ class Default(Style):
     def make_cr(self):
         return ""
 
+    def make_cursor(self, author, posx, posy):
+        if not col:
+            curs += "|"
+        else:
+            a, b = style.make_color(col)
+            curs += a + "|" + b
+        return curs
 
 
 class Raw(Style):
@@ -36,6 +43,9 @@ class Raw(Style):
     def make_attr(self, attr):
         return ("", "")
     def make_cr(self):
+        return ""
+
+    def make_cursor(self, author, posx, posy):
         return ""
 
 
@@ -65,6 +75,9 @@ class Markdown(Style):
     def make_cr(self):
         return ""
 
+    def make_cursor(self, author, posx, posy):
+        return ""
+
 
 class Html(Style):
     def make_color(self, color):
@@ -92,6 +105,14 @@ class Html(Style):
 
     def make_cr(self):
         return "<br />"
+
+    def make_cursor(self, author, posx, posy):
+        if not col:
+            curs += "|"
+        else:
+            a, b = style.make_color(col)
+            curs += a + "|" + b
+        return curs
 
 
 STYLES = dict(inspect.getmembers(sys.modules[__name__],

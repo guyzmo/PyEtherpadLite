@@ -157,6 +157,9 @@ class Text:
                                                         self._authors.get_color(self._t.authors[idx])))
         return self._authors.get_color(self._t.authors[idx])
 
+    def get_cursor(self, posx, posy):
+        return self._cursors.get(posx, posy)
+
     def get_author(self, idx):
         """
         returns the color of the author of given character
@@ -210,14 +213,10 @@ class Text:
                 posy += 1
                 posx = 0
                 pre += style.make_cr()
-            if self._cursors.get(posx, posy):
-                a = self._cursors.get(posx, posy)
-                a = self._authors.get_color(a)
-                if not a:
-                    aft += "|"
-                else:
-                    a, b = style.make_color(a)
-                    aft += a + "|" + b
+            if self.get_cursor(posx, posy):
+                pos = self.get_cursor(posx, posy)
+                author = self.get_author(i)
+                aft += style.make_cursor(author, posx, posy)
             if not author and self.get_author(i):
                 author = self.get_author(i)
                 a, b = style.make_color(author)
