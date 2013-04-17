@@ -142,10 +142,10 @@ class Text:
         returns the color of the author of given character
         :param idx: int being the index of a character in text
         """
-        log.debug("Text.get_author_idx(%s): %s" % (idx,self._authors.get_color_idx(self._t.authors[idx])))
-        if self._authors.has(self._t.authors[idx]):
-            return self._authors.get_color_idx(self._t.authors[idx])
-        return 0
+        log.debug("Text.get_author_idx(%s) " % (idx, ))
+        if idx in self._t.authors.keys():
+            return self._t.authors[idx]
+        return None
 
     def get_author_color(self, idx):
         """
