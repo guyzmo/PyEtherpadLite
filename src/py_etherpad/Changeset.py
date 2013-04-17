@@ -9,79 +9,35 @@ from difflib import SequenceMatcher
 
 from utils import num_to_str
 
-def op_code_match(opcode, a0, a1, b0, b1, csd, sm):
+def op_code_match(opcode, a0, a1, b0, b1, changeset=None, sm=None, text=None):
+    optr = ''
+    chrb = ''
+    print "!@#$", opcode
     if opcode == 'equal':
-        nls = [a0+m.start() for m in re.finditer('\n', sm.b[a0:a1])]
-        if len(nls) > 0:
-            # "|L=N" : Keep N characters from the source text,
-            #          containing L newlines. The last character kept
-            #          MUST be a newline, and the final newline of
-            #          the document is allowed.
-            if nls[-1] == b1:
-                # if ends with a newline
-                csd["ops"] += '|'+num_to_str(len(nls))
-                csd["ops"] += '='+num_to_str(a1-a0)
+        print "EQUAL"
+        # if substr contains a newlines
+        if '\n' in sm.a[a0:a1]:
+            if sm.a[a0:a1][-1] == '\n':
+                nls = len([a0+m.start() for m in re.finditer('\n', sm.b[a0:a1])])
+                optr += '|' + num_to_str(nls, 36)
+                optr += '=' + num_to_str(a1-a0, 36)
+            # if substr does not end with a newline
             else:
-                # if ends with not a newline
-                csd["ops"] += '|'+num_to_str(len(nls))
-                csd["ops"] += '='+num_to_str(nls[-1]-a0)
-                op_code_match('equal', nls[-1]+1, a1, b0, b1, csd, sm)
+                 print "NOT ENDING WITH NEWLINE !@#$" # TODO
         else:
-            # "=N" : Keep N characters from the source text,
-            #        none of them newlines
-            csd["ops"] += '='+num_to_str(a1-a0)
-
+            optr += '=' + num_to_str(a1-a0, 36)
     elif opcode == 'insert':
-        nls = [b0+m.start() for m in re.finditer('\n', sm.b[b0:b1])]
-        if len(nls) > 0:
-            # "|L+N" : Insert N characters from the source text,
-            #          containing L newlines. The last character
-            #          inserted MUST be a newline, but not the
-            #          (new) document's final newline.
-            if nls[-1] == b1:
-                # if ends with a newline
-                csd["ops"] += '|'+num_to_str(len(nls))
-                csd["ops"] += '+'+num_to_str(b1-b0)
-                csd["char_bank"] += sm.b[b0:b1]
-            else:
-                # if ends with not a newline
-                csd["ops"] += '|'+num_to_str(len(nls)-1)
-                csd["ops"] += '+'+num_to_str(nls[-1]-b0)
-                csd["char_bank"] += sm.b[b0:nls[-1]]
-                op_code_match('insert', a0, a1, nls[-1]+1, b1, csd, sm)
-        else:
-            # "+N" : Insert N characters from the bank,
-            #        none of them newlines
-            csd["ops"] += '+'+num_to_str(b1-b0)
-            csd["char_bank"] += sm.b[b0:b1]
+        print "INSERT"
 
+        optr += '*' + text._authors.get_user_id()
+        optr += '+' + num_to_str(b1-b0, 36)
+        chrb += sm.b[b0:b1]
     elif opcode == 'delete':
-        nls = [b0+m.start() for m in re.finditer('\n', sm.b[b0:b1])]
-        if len(nls) > 0:
-            # "|L-N" : Delete N characters from the source text,
-            #          containing L newlines. The last character
-            #          inserted MUST be a newline, but not the (old)
-            #          document's final newline.
-            if nls[-1] == b1:
-                # if ends with a newline
-                csd["ops"] += '|'+num_to_str(len(nls))
-                csd["ops"] += '-'+num_to_str(b1-b0)
-            else:
-                # if ends with not a newline
-                csd["ops"] += '|'+num_to_str(len(nls)-1)
-                csd["ops"] += '-'+num_to_str(nls[-1]-b0)
-                op_code_match('insert', a0, a1, nls[-1]+1, b1, csd, sm)
-        else:
-            # "-N" : Skip over (delete) N characters from
-            #        the source text, none of them newlines
-            length = a1-a0
-            csd["ops"] += '-'+num_to_str(a1-a0)
-
+        optr += '-' + num_to_str(a1-a0, 36)
     elif opcode == 'replace':
-        # remove then add
-        op_code_match('delete', a0, a1, b0, b0, csd, sm)
-        op_code_match('insert', a0, a0, b0, b1, csd, sm)
-
+        print "REPLACE"
+    changeset['ops'] += optr
+    changeset['char_bank'] += chrb
 
 def unpack(cs):
     """
@@ -122,8 +78,8 @@ def pack(csd):
     """
     log.debug("pack: %s" % (csd,))
     len_diff = csd["new_len"] - csd["old_len"]
-    len_diff_str = "<" + num_to_str(len_diff) if len_diff >= 0 else "<" + num_to_str(-len_diff)
-    cs = [ 'Z:', num_to_str(csd["old_len"]), len_diff_str, "|", csd["ops"], "$", csd["char_bank"] ]
+    len_diff_str = ">" + num_to_str(len_diff) if len_diff >= 0 else "<" + num_to_str(-len_diff)
+    cs = [ 'Z:', num_to_str(csd["old_len"]), len_diff_str, csd["ops"], "$", csd["char_bank"] ]
     cs = ''.join(cs)
     log.debug("pack: returns %s" % (cs,))
     return cs
@@ -139,14 +95,20 @@ class Changeset:
         :param old: old Text object
         :param new: new text string
         """
-        old = str(old)
-        sm = SequenceMatcher(None, old, new)
-        csd = dict(old_len=len(old),
-                    new_len=len(new),
+        olds = str(old)
+        sm = SequenceMatcher(None, olds, new)
+        csd = dict(old_len=len(olds)+1,
+                    new_len=len(new)+1,
                     ops="",
                     char_bank="")
-        for opcode, a0, a1, b0, b1 in sm.get_opcodes():
-            op_code_match(opcode, a0, a1, b0, b1, csd, sm)
+        opcodes = [opcode_tup for opcode_tup in sm.get_opcodes()]
+        last_op = 0
+        for i in range(0, len(opcodes)):
+            if opcodes[i][0] != "equal":
+                last_op = i
+            print opcodes[i][0], last_op, i
+        for opcode_tup in opcodes[:last_op+1]:
+            op_code_match(*opcode_tup, changeset=csd, sm=sm, text=old)
         return csd
 
     def apply_to_text(self, cs, txt):
