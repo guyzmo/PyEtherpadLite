@@ -90,7 +90,9 @@ class EtherpadDispatch(object):
                      char_bank="")
         apool = vars["apool"]
 
-        self.authors.set_user_id(data["userId"])
+        for i, params in apool['numToAttrib'].iteritems():
+            if params[0] == 'author' and params[1] == data["userId"]:
+                self.authors.set_user_id(i)
         self.authors.set_user_color(data["userColor"])
 
         self.text = Text(text=text, cursors=self.cursors, attribs=Attributes(pool=apool), authors=self.authors)
