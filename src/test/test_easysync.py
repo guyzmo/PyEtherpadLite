@@ -151,35 +151,35 @@ class DiffTests(EasySyncTests):
         self.apply(s_old, s_new, "Z:1x>3|1=w*0+3$XXX")
 
 
-#     def test_delete_after_start(self):
-#         """Diff: Deletes some text after begining"""
-#         s_old = "XXXHe who makes a beast of himself\n"+\
-#                 "gets rid of the pain of being a man\n"
-#         s_new = "He who makes a beast of himself\n"+\
-#                 "gets rid of the pain of being a man\n"
-#         self.apply(s_old, s_new, "Z:20<3-3$")
+    def test_delete_after_start(self):
+        """Diff: Deletes some text after begining"""
+        s_old = "XXXHe who makes a beast of himself\n"+\
+                "gets rid of the pain of being a man\n"
+        s_new = "He who makes a beast of himself\n"+\
+                "gets rid of the pain of being a man\n"
+        self.apply(s_old, s_new, "Z:20<3-3$")
 
-    # def test_delete_before_end(self):
-    #     """Diff: Deletes some text before end"""
-    #     s_old = "He who makes a beast of himself\n"+\
-    #             "gets rid of the pain of being a manXXX\n"
-    #     s_new = "He who makes a beast of himself\n"+\
-    #             "gets rid of the pain of being a man\n"
-    #     self.apply(s_old, s_new, "Z:20<3|1=w=z-3$")
+    def test_delete_before_end(self):
+        """Diff: Deletes some text before end"""
+        s_old = "He who makes a beast of himself\n"+\
+                "gets rid of the pain of being a manXXX\n"
+        s_new = "He who makes a beast of himself\n"+\
+                "gets rid of the pain of being a man\n"
+        self.apply(s_old, s_new, "Z:20<3|1=w=z-3$")
 
-    # def test_delete_before_cr(self):
-    #     """Diff: Deletes some text before <CR>"""
-    #     s_old = "He who makes a beast of himselfXXX\n"+\
-    #             "gets rid of the pain of being a man\n"
-    #     s_new = "He who makes a beast of himself\n"+\
-    #             "gets rid of the pain of being a man\n"
-    #     self.apply(s_old, s_new, "Z:20<3=v-3$")
+    def test_delete_before_cr(self):
+        """Diff: Deletes some text before <CR>"""
+        s_old = "He who makes a beast of himselfXXX\n"+\
+                "gets rid of the pain of being a man\n"
+        s_new = "He who makes a beast of himself\n"+\
+                "gets rid of the pain of being a man\n"
+        self.apply(s_old, s_new, "Z:20<3=v-3$")
 
-    # def test_delete_after_cr(self):
-    #     """Diff: Deletes some text after <CR>"""
-    #     s_old = "He who makes a beast of himself\n"+\
-    #             "XXXgets rid of the pain of being a man\n"
-    #     s_new = "He who makes a beast of himself\n"+\
-    #             "gets rid of the pain of being a man\n"
-    #     self.apply(s_old, s_new, "Z:20<3|1=w-3$")
+    def test_delete_after_cr(self):
+        """Diff: Deletes some text after <CR>"""
+        s_old = "He who makes a beast of himself\n"+\
+                "XXXgets rid of the pain of being a man\n"
+        s_new = "He who makes a beast of himself\n"+\
+                "gets rid of the pain of being a man\n"
+        self.apply(s_old, s_new, "Z:20<3|1=w-3$")
 

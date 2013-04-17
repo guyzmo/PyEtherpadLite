@@ -17,22 +17,38 @@ def op_code_match(opcode, a0, a1, b0, b1, changeset=None, sm=None, text=None):
         print "EQUAL"
         # if substr contains a newlines
         if '\n' in sm.a[a0:a1]:
+            # "|L=N" : Keep N characters from the source text,
+            #          containing L newlines. The last character kept
+            #          MUST be a newline, and the final newline of
+            #          the document is allowed.
+            nls = [a0+m.start()+1 for m in re.finditer('\n', sm.b[a0:a1])]
             if sm.a[a0:a1][-1] == '\n':
-                nls = len([a0+m.start() for m in re.finditer('\n', sm.b[a0:a1])])
-                optr += '|' + num_to_str(nls, 36)
+                optr += '|' + num_to_str(len(nls), 36)
                 optr += '=' + num_to_str(a1-a0, 36)
             # if substr does not end with a newline
             else:
-                 print "NOT ENDING WITH NEWLINE !@#$" # TODO
+                nls = [a0] + nls + [a1]
+                print nls
+                changeset['ops'] += optr
+                for c0, c1 in zip(nls, nls[1:]):
+                    #print "PYF", repr(sm.a[c0:c1])
+                    op_code_match('equal', c0, c1, c0, c1, changeset, sm, text)
         else:
             optr += '=' + num_to_str(a1-a0, 36)
     elif opcode == 'insert':
-        print "INSERT"
-
-        optr += '*' + text._authors.get_user_id()
+        # "|L+N" : Insert N characters from the source text,
+        #          containing L newlines. The last character
+        #          inserted MUST be a newline, but not the
+        #          (new) document's final newline.
+        if text._authors.get_user_id():
+            optr += '*' + text._authors.get_user_id()
         optr += '+' + num_to_str(b1-b0, 36)
         chrb += sm.b[b0:b1]
     elif opcode == 'delete':
+        # "|L-N" : Delete N characters from the source text,
+        #          containing L newlines. The last character
+        #          inserted MUST be a newline, but not the (old)
+        #          document's final newline.
         optr += '-' + num_to_str(a1-a0, 36)
     elif opcode == 'replace':
         print "REPLACE"
