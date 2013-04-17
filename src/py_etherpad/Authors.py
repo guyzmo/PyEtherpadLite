@@ -7,6 +7,20 @@ log = logging.getLogger('py_etherpad.Authors')
 class Authors(object):
     def __init__(self, authors={}):
         self._authors = authors
+        self._user_id = None
+        self._user_col = None
+
+    def set_user_id(self, i):
+        self._user_id = i
+
+    def set_user_color(self, c):
+        self._user_col = c
+
+    def get_user_id(self):
+        return self._user_id
+
+    def get_user_color(self):
+        return self._user_col
 
     def set_color_palette(self, cp):
         log.debug("set_color_palette")

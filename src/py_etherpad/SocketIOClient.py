@@ -89,8 +89,9 @@ class EtherpadDispatch(object):
                      ops=vars["initialAttributedText"]["attribs"],
                      char_bank="")
         apool = vars["apool"]
-        self.color = data["userColor"]
-        self.user_id = data["userId"]
+
+        self.authors.set_user_id(data["userId"])
+        self.authors.set_user_color(data["userColor"])
 
         self.text = Text(text=text, cursors=self.cursors, attribs=Attributes(pool=apool), authors=self.authors)
         csd = pack(csd)
