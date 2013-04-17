@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """Module to test py_etherpad."""
 
-import py_etherpad
+import os
+
+from py_etherpad import APIClient
 import unittest
 
 
@@ -10,11 +12,18 @@ class TestEtherpadLiteClient(unittest.TestCase):
 
     def setUp(self):
         """Assign a shared EtherpadLiteClient instance to self."""
-        self.ep_client = py_etherpad.EtherpadLiteClient()
+        try:
+            with open(os.path.join(os.path.dirname(__file__),
+                                '../../APIKEY.txt')) as read_handle:
+                self.ep_client = APIClient(apiKey=read_handle.read())
+        except IOError, ioe:
+            print "Please place the EPL APIKEY.txt at root of PyEtherpad sources."
+            raise ioe
 
     def testCreateLargePad(self):
         """Initialize a pad with a large body of text, and remove the pad if that succeeds."""
-        with open('tell-tale.txt') as read_handle:
+        with open(os.path.join(os.path.dirname(__file__),
+                               'tell-tale.txt')) as read_handle:
             content = read_handle.read()
 
         #Create and remove pad
