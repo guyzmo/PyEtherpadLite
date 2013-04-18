@@ -78,6 +78,7 @@ class EtherpadDispatch(object):
         self.cursors = Cursors()
         self.color = None
         self.user_id = None
+        self.changeset = None
 
     def on_client_vars(self, data):
         log.debug("on_clientvars: %s" % data)
@@ -122,6 +123,20 @@ class EtherpadDispatch(object):
             self.text.set_revision(newRev)
         else:
             log.error("ERROR: new revision prior to current revision")
+
+    def on_accept_commit(self, data):
+        print 'on_accept_commit(%s)' % data
+        rev = int(data["newRev"])
+        changeset = self.changeset['changeset']
+        if 'apool' in self.changeset.keys():
+            self.text._attributes._pool = self.changeset['apool']
+        if rev > self.text.get_revision():
+            log.debug("apply changeset %s at rev %s" % (changeset, rev))
+            self.text.update(changeset)
+            self.text.set_revision(rev)
+        else:
+            log.error("base revision different from current")
+
 
     def on_user_newinfo(self, data):
         log.debug("on_user_newinfo: %s" % data)
@@ -252,13 +267,14 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
         """
         def on_response(self, *args):
             print "[send_user_changes:Response]", args
+        self.changeset = dict(type="USER_CHANGES",
+                                baseRev=baseRev,
+                                apool=apool,
+                                changeset=changeset)
         self.socketIO.emit('message', dict(component='pad',
                                            type="COLLABROOM",
                                            padId=self.socketIO.params['padid'],
-                                           data=dict(type="USER_CHANGES",
-                                                     baseRev=baseRev,
-                                                     apool=apool,
-                                                     changeset=changeset),
+                                           data=self.changeset,
                                            protocolVersion=2), on_response)
 
     def send_userinfo_update(self, name, colorId):
