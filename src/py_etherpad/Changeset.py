@@ -93,6 +93,8 @@ def pack(csd):
     @returns {string} String encoded Changeset
     """
     log.debug("pack: %s" % (csd,))
+    if not csd:
+        return None
     len_diff = csd["new_len"] - csd["old_len"]
     len_diff_str = ">" + num_to_str(len_diff) if len_diff >= 0 else "<" + num_to_str(-len_diff)
     cs = [ 'Z:', num_to_str(csd["old_len"]), len_diff_str, csd["ops"], "$", csd["char_bank"] ]
@@ -112,6 +114,8 @@ class Changeset:
         :param new: new text string
         """
         olds = str(old)
+        if olds == new:
+            return None
         sm = SequenceMatcher(None, olds, new)
         csd = dict(old_len=len(olds),
                     new_len=len(new),

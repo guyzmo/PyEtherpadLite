@@ -68,7 +68,8 @@ class EtherpadIO(object):
 
     def patch_text(self, old, new):
         cs = pack(old.diff(new))
-        self.epad.namespace.send_user_changes(old.get_revision(), old.get_apool(), cs)
+        if cs:
+            self.epad.namespace.send_user_changes(old.get_revision(), old.get_apool(), cs)
 
 
 class EtherpadDispatch(object):
