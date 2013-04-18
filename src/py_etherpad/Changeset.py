@@ -113,8 +113,8 @@ class Changeset:
         """
         olds = str(old)
         sm = SequenceMatcher(None, olds, new)
-        csd = dict(old_len=len(olds)+1,
-                    new_len=len(new)+1,
+        csd = dict(old_len=len(olds),
+                    new_len=len(new),
                     ops="",
                     char_bank="")
         opcodes = [opcode_tup for opcode_tup in sm.get_opcodes()]
