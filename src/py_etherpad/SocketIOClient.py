@@ -91,9 +91,14 @@ class EtherpadDispatch(object):
         apool = vars["apool"]
 
         for i, params in apool['numToAttrib'].iteritems():
-            if params[0] == 'author' and params[1] == data["userId"]:
-                self.authors.set_user_id(i)
-        self.authors.set_user_color(data["userColor"])
+            if params[0] == 'author' and params[1] == data['userId']:
+                print 'set_user_id', i
+                user_id = i
+                break
+        else:
+            apool['numToAttrib'][str(int(i)+1)] = ['author', data["userId"]]
+            user_id = str(int(i)+1)
+        self.authors.set_user_id(user_id, data['userId'], color=data['userColor'])
 
         self.text = Text(text=text, cursors=self.cursors, attribs=Attributes(pool=apool), authors=self.authors)
         csd = pack(csd)

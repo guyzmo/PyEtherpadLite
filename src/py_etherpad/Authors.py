@@ -10,11 +10,10 @@ class Authors(object):
         self._user_id = None
         self._user_col = None
 
-    def set_user_id(self, i):
+    def set_user_id(self, i, aid, name=None, color="#000000"):
         self._user_id = i
-
-    def set_user_color(self, c):
-        self._user_col = c
+        self._user_color = color
+        self._authors[aid] = dict(name=name, color=color, padIDs={})
 
     def get_user_id(self):
         return self._user_id
