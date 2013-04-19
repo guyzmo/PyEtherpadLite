@@ -149,6 +149,14 @@ class DiffTests(EasySyncTests):
                 "XXXgets rid of the pain of being a man\n"
         self.apply(s_old, s_new, "Z:1w>3|1=w*0+3$XXX")
 
+    def test_insert_over_cr(self):
+        """Diff: Inserts some text over <CR>"""
+        s_old = "He who makes a beast of himself\n"+\
+                "gets rid of the pain of being a man\n"
+        s_new = "He who makes a beast of himselfXXX\n"+\
+                "XXXgets rid of the pain of being a man\n"
+        self.apply(s_old, s_new, "Z:1x>6=v|1-1*0|1+4*0+3$XXX\nXXX")
+
 
     def test_delete_after_start(self):
         """Diff: Deletes some text after begining"""
