@@ -100,8 +100,7 @@ class UpdateTests(EasySyncTests):
 class DiffTests(EasySyncTests):
     """Changeset to be sent"""
     def apply(self, o, n, expected):
-        self.authors.set_user_id("0")
-        self.authors.set_user_color("#424242")
+        self.authors.set_user_id("0", "#424242")
         t = Text(text=o,
                  cursors=Cursors(),
                  attribs=self.attributes,
@@ -124,7 +123,7 @@ class DiffTests(EasySyncTests):
                 "gets rid of the pain of being a man\n"
         s_new = "XXXHe who makes a beast of himself\n"+\
                 "gets rid of the pain of being a man\n"
-        self.apply(s_old, s_new, "Z:1x>3*0+3$XXX")
+        self.apply(s_old, s_new, "Z:1w>3*0+3$XXX")
 
     def test_insert_before_end(self):
         """Diff: Inserts some text at the end"""
@@ -132,7 +131,7 @@ class DiffTests(EasySyncTests):
                 "gets rid of the pain of being a man\n"
         s_new = "He who makes a beast of himself\n"+\
                 "gets rid of the pain of being a man\nXXX"
-        self.apply(s_old, s_new, "Z:1x>3|2=1w*0+3$XXX")
+        self.apply(s_old, s_new, "Z:1w>3|2=1w*0+3$XXX")
 
     def test_insert_before_cr(self):
         """Diff: Inserts some text before <CR>"""
@@ -140,7 +139,7 @@ class DiffTests(EasySyncTests):
                 "gets rid of the pain of being a man\n"
         s_new = "He who makes a beast of himselfXXX\n"+\
                 "gets rid of the pain of being a man\n"
-        self.apply(s_old, s_new, "Z:1x>3=v*0+3$XXX")
+        self.apply(s_old, s_new, "Z:1w>3=v*0+3$XXX")
 
     def test_insert_after_cr(self):
         """Diff: Inserts some text after <CR>"""
@@ -148,7 +147,7 @@ class DiffTests(EasySyncTests):
                 "gets rid of the pain of being a man\n"
         s_new = "He who makes a beast of himself\n"+\
                 "XXXgets rid of the pain of being a man\n"
-        self.apply(s_old, s_new, "Z:1x>3|1=w*0+3$XXX")
+        self.apply(s_old, s_new, "Z:1w>3|1=w*0+3$XXX")
 
 
     def test_delete_after_start(self):
@@ -157,7 +156,7 @@ class DiffTests(EasySyncTests):
                 "gets rid of the pain of being a man\n"
         s_new = "He who makes a beast of himself\n"+\
                 "gets rid of the pain of being a man\n"
-        self.apply(s_old, s_new, "Z:20<3-3$")
+        self.apply(s_old, s_new, "Z:1z<3-3$")
 
     def test_delete_before_end(self):
         """Diff: Deletes some text before end"""
@@ -165,7 +164,7 @@ class DiffTests(EasySyncTests):
                 "gets rid of the pain of being a manXXX\n"
         s_new = "He who makes a beast of himself\n"+\
                 "gets rid of the pain of being a man\n"
-        self.apply(s_old, s_new, "Z:20<3|1=w=z-3$")
+        self.apply(s_old, s_new, "Z:1z<3|1=w=z-3$")
 
     def test_delete_before_cr(self):
         """Diff: Deletes some text before <CR>"""
@@ -173,7 +172,7 @@ class DiffTests(EasySyncTests):
                 "gets rid of the pain of being a man\n"
         s_new = "He who makes a beast of himself\n"+\
                 "gets rid of the pain of being a man\n"
-        self.apply(s_old, s_new, "Z:20<3=v-3$")
+        self.apply(s_old, s_new, "Z:1z<3=v-3$")
 
     def test_delete_after_cr(self):
         """Diff: Deletes some text after <CR>"""
@@ -181,5 +180,5 @@ class DiffTests(EasySyncTests):
                 "XXXgets rid of the pain of being a man\n"
         s_new = "He who makes a beast of himself\n"+\
                 "gets rid of the pain of being a man\n"
-        self.apply(s_old, s_new, "Z:20<3|1=w-3$")
+        self.apply(s_old, s_new, "Z:1z<3|1=w-3$")
 
