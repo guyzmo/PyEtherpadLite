@@ -22,8 +22,8 @@ class EtherpadIO(object):
                        verbose = False,
                        transports=['xhr-polling', 'websocket'],
                        **kwarg):
-        print "%s://%s:%s/%s%s" % ('https' if secure else 'http', host,
-                                                  port, path, pad)
+        log.debug('EtherpadIO(%s://%s:%s/%s%s")' % ('https' if secure else 'http', host,
+                                                  port, path, pad))
         res = requests.get("%s://%s:%s/%s%s" % ('https' if secure else 'http',
                                                   host, port, path, pad))
 
@@ -94,7 +94,6 @@ class EtherpadDispatch(object):
 
         for i, params in apool['numToAttrib'].iteritems():
             if params[0] == 'author' and params[1] == data['userId']:
-                print 'set_user_id', i
                 user_id = i
                 break
         else:
@@ -126,7 +125,7 @@ class EtherpadDispatch(object):
             log.error("ERROR: new revision prior to current revision")
 
     def on_accept_commit(self, data):
-        print 'on_accept_commit(%s)' % data
+        log.debug('on_accept_commit(%s)' % data)
         rev = int(data["newRev"])
         changeset = self.changeset['changeset']
         if 'apool' in self.changeset.keys():
@@ -173,7 +172,7 @@ class EtherpadDispatch(object):
                 "myAuthorId" : data["payload"]["authorId"]
             }
             def on_response(self, *args):
-                print "[requestRTC:Response]", args
+                log.debug("requestRTC:Response(%s)" % args)
             self.socketIO.emit('message', dict(component='pad',
                                             type="CUSTOM",
                                             padId=self.socketIO.params['padid'],
@@ -238,7 +237,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def send_client_ready(self):
         def on_response(self, *args):
-            print "[Connected:Response]", args
+            log.debug("[Connected:Response] %s" % args)
 
         self.socketIO.emit('message', dict(component='pad',
                                            type="CLIENT_READY",
@@ -250,7 +249,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def send_changeset_req(self, data, granularity, start, request_id):
         def on_response(self, *args):
-            print "[send_changeset:Response]", args
+            log.debug("[send_changeset:Response] %s"% args)
         self.socketIO.emit('message', dict(component='pad',
                                            type="CHANGESET_REQ",
                                            padId=self.socketIO.params['padid'],
@@ -267,7 +266,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
         :param changeset: packed string representing of a changeset object
         """
         def on_response(self, *args):
-            print "[send_user_changes:Response]", args
+            log.debug("[send_user_changes:Response]: %s" % args)
         self.changeset = dict(type="USER_CHANGES",
                                 baseRev=baseRev,
                                 apool=apool,
@@ -280,7 +279,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def send_userinfo_update(self, name, colorId):
         def on_response(self, *args):
-            print "[send_userinfo_update:Response]", args
+            log.debug("[send_userinfo_update:Response]: %s" % args)
         self.socketIO.emit('message', dict(component='pad',
                                            type="COLLABROOM",
                                            padId=self.socketIO.params['padid'],
@@ -292,7 +291,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def send_chat_message(self, text):
         def on_response(self, *args):
-            print "[send_changeset:Response]", args
+            log.debug("[send_changeset:Response]: %s" % args)
         self.socketIO.emit('message', dict(component='pad',
                                            type="COLLABROOM",
                                            data=dict(type="CHAT_MESSAGE",
@@ -302,7 +301,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def send_get_chat_messages(self, start, end):
         def on_response(self, *args):
-            print "[send_changeset:send_get_chat_message]", args
+            log.debug("[send_changeset:send_get_chat_message]: %s" % args)
         self.socketIO.emit('message', dict(component='pad',
                                            type="COLLABROOM",
                                            data=dict(type="GET_CHAT_MESSAGES",
@@ -312,7 +311,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def send_save_revision(self, data):
         def on_response(self, *args):
-            print "[send_save_revision:Response]", args
+            log.debug("[send_save_revision:Response]: %s" % args)
         self.socketIO.emit('message', dict(component='pad',
                                            type="COLLABROOM",
                                            data=dict(type="SAVE_REVISION"),
@@ -321,7 +320,7 @@ class EtherpadService(BaseNamespace, EtherpadDispatch):
 
     def send_client_message(self, data):
         def on_response(self, *args):
-            print "[send_client_message:Response]", args
+            log.debug("[send_client_message:Response]: %s" % args)
         self.socketIO.emit('message', dict(component='pad',
                                            type="COLLABROOM",
                                            padId=self.socketIO.params['padid'],

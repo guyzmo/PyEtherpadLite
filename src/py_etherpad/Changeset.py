@@ -12,21 +12,25 @@ from utils import num_to_str
 def op_code_match(opcode, a0, a1, b0, b1, changeset=None, sm=None, text=None):
     optr = ''
     chrb = ''
-    print "!@#$", opcode
+    print "    !@#$", opcode, "A:'"+repr(sm.a[a0:a1])+"'", "B:'"+repr(sm.b[b0:b1])+"'"
     if opcode == 'equal':
-        print "EQUAL"
+        print "    EQUAL"
         # if substr contains a newlines
         if '\n' in sm.a[a0:a1]:
+            print "    CONTAINS NL"
             # "|L=N" : Keep N characters from the source text,
             #          containing L newlines. The last character kept
             #          MUST be a newline, and the final newline of
             #          the document is allowed.
             nls = [a0+m.start()+1 for m in re.finditer('\n', sm.b[a0:a1])]
+            print "    nls", nls
             if sm.a[a0:a1][-1] == '\n':
+                print "    ENDS WITH NL: |=", len(nls), a1-a0
                 optr += '|' + num_to_str(len(nls), 36)
                 optr += '=' + num_to_str(a1-a0, 36)
             # if substr does not end with a newline
             else:
+                print "    DOES NOT END WITH NL"
                 nls = [a0] + nls + [a1]
                 print nls
                 changeset['ops'] += optr
@@ -34,8 +38,10 @@ def op_code_match(opcode, a0, a1, b0, b1, changeset=None, sm=None, text=None):
                     #print "PYF", repr(sm.a[c0:c1])
                     op_code_match('equal', c0, c1, c0, c1, changeset, sm, text)
         else:
+            print "    CONTAINS NO NL: =", a1-a0
             optr += '=' + num_to_str(a1-a0, 36)
     elif opcode == 'insert':
+        print "    INSERT *+", b1-b0
         # "|L+N" : Insert N characters from the source text,
         #          containing L newlines. The last character
         #          inserted MUST be a newline, but not the
@@ -45,13 +51,14 @@ def op_code_match(opcode, a0, a1, b0, b1, changeset=None, sm=None, text=None):
         optr += '+' + num_to_str(b1-b0, 36)
         chrb += sm.b[b0:b1]
     elif opcode == 'delete':
+        print "    DELETE -", a1-a0
         # "|L-N" : Delete N characters from the source text,
         #          containing L newlines. The last character
         #          inserted MUST be a newline, but not the (old)
         #          document's final newline.
         optr += '-' + num_to_str(a1-a0, 36)
     elif opcode == 'replace':
-        print "REPLACE"
+        print "    REPLACE"
     changeset['ops'] += optr
     changeset['char_bank'] += chrb
 
@@ -116,19 +123,23 @@ class Changeset:
         olds = str(old)
         if olds == new:
             return None
+        print repr(olds), repr(new)
         sm = SequenceMatcher(None, olds, new)
+        print "    CS LENS  ", len(olds), len(new)
         csd = dict(old_len=len(olds),
                     new_len=len(new),
                     ops="",
                     char_bank="")
         opcodes = [opcode_tup for opcode_tup in sm.get_opcodes()]
         last_op = 0
+        print "    CS OPC 1", opcodes
         for i in range(0, len(opcodes)):
             if opcodes[i][0] != "equal":
                 last_op = i
-            print opcodes[i][0], last_op, i
+        print "    CS OPC 2", opcodes[:last_op+1]
         for opcode_tup in opcodes[:last_op+1]:
             op_code_match(*opcode_tup, changeset=csd, sm=sm, text=old)
+        print "    CS CSD  ", csd
         return csd
 
     def apply_to_text(self, cs, txt):
